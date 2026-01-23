@@ -133,7 +133,7 @@ class _RemindersPageState extends State<RemindersPage> {
   Future<void> _submitReminderToAPI(Reminder reminder) async {
     try {
       final deviceId = await _getDeviceId();
-      final apiUrl = 'https://willowinsurance.youare.ninja/wp-json/gf-custom/v1/submit';
+      final apiUrl = 'https://willowinsurance.ca/wp-json/gf-custom/v1/submit';
       
       // Format dates as YYYY-MM-DD
       final renewalDateStr = DateFormat('yyyy-MM-dd').format(reminder.renewalDate);

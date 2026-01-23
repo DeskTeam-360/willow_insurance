@@ -6,10 +6,10 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/data_init_model.dart';
 
 class DataService {
-  // static const String apiUrl =
-  //     'https://willowinsurance.ca/wp-json/custom-api/v1/data-init';
-      static const String apiUrl =
-      'https://willowinsurance.youare.ninja/wp-json/custom-api/v1/data-init';
+  static const String apiUrl =
+      'https://willowinsurance.ca/wp-json/custom-api/v1/data-init';
+      // static const String apiUrl =
+      // 'https://willowinsurance.youare.ninja/wp-json/custom-api/v1/data-init';
 
   // Singleton instance
   static final DataService _instance = DataService._internal();

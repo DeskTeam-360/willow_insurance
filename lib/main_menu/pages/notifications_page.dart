@@ -78,15 +78,6 @@ class _NotificationsPageState extends State<NotificationsPage> {
     }
   }
 
-  Future<void> _markAsRead(int notificationId) async {
-    try {
-      final notificationDb = NotificationDatabase();
-      await notificationDb.markAsRead(notificationId);
-      await _loadNotifications();
-    } catch (e) {
-      print('Error marking as read: $e');
-    }
-  }
 
   Future<void> _markAllAsRead() async {
     try {

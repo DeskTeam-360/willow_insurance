@@ -252,17 +252,17 @@ class _WebViewPageState extends State<WebViewPage> {
                   fit: BoxFit.fitWidth,
                 ),
                 SizedBox(width: 10),
-                GestureDetector(
-                  onTap: () async {
-                    final urlToOpen = _finalUrl ?? widget.url;
-                    await _openInExternalBrowser(urlToOpen);
-                  },
-                  child: Icon(
-                    Icons.open_in_browser,
-                    color: Colors.white,
-                    size: 24,
-                  ),
-                ),
+                // GestureDetector(
+                //   onTap: () async {
+                //     final urlToOpen = _finalUrl ?? widget.url;
+                //     await _openInExternalBrowser(urlToOpen);
+                //   },
+                //   child: Icon(
+                //     Icons.open_in_browser,
+                //     color: Colors.white,
+                //     size: 24,
+                //   ),
+                // ),
               ],
             ),
           ),
