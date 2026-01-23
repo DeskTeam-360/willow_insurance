@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'notifications_page.dart';
 import 'resources_page.dart';
 import 'about_us_page.dart';
 import 'video_page.dart';
-import 'book_appointment_page.dart';
 import 'contact_page.dart';
+import '../../services/notification_database.dart';
 
 class HomePage extends StatefulWidget {
   final Function(int)? onPageChange;
@@ -38,7 +37,27 @@ class _HomePageState extends State<HomePage> {
   ];
 
   int currentIndex = 0;
-  int countNotifications = 3;
+  int countNotifications = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadNotificationCount();
+  }
+
+  Future<void> _loadNotificationCount() async {
+    try {
+      final notificationDb = NotificationDatabase();
+      final count = await notificationDb.getUnreadCount();
+      if (mounted) {
+        setState(() {
+          countNotifications = count;
+        });
+      }
+    } catch (e) {
+      print('Error loading notification count: $e');
+    }
+  }
 
   Widget _buildMenuCard({
     required BuildContext context,
@@ -168,7 +187,7 @@ class _HomePageState extends State<HomePage> {
                       clipper: WaveClipper(),
                       child: SizedBox(
                         width: MediaQuery.of(context).size.width,
-                        height: 150,
+                        height: 160,
                         child: SvgPicture.asset(
                           'assets/images/willow_home_illustration.svg',
                           width: MediaQuery.of(context).size.width,
@@ -178,7 +197,7 @@ class _HomePageState extends State<HomePage> {
                       ),
                     ),
                     Positioned(
-                      top: 40,
+                      top: 50,
                       left: 70,
                       child: Text(
                         'Hello !!',
@@ -742,13 +761,15 @@ class _HomePageState extends State<HomePage> {
             top: 40,
             right: 20,
             child: GestureDetector(
-              onTap: () {
-                Navigator.push(
+              onTap: () async {
+                await Navigator.push(
                   context,
                   MaterialPageRoute(
                     builder: (context) => NotificationsPage(),
                   ),
                 );
+                // Reload notification count when returning from notifications page
+                _loadNotificationCount();
               },
               child: Stack(
                 clipBehavior: Clip.none,

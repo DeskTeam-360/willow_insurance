@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Notification;
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:intl/intl.dart';
@@ -7,6 +7,8 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'dart:io';
 import '../../models/reminder_model.dart';
+import '../../services/notification_database.dart';
+import '../../models/notification_model.dart';
 
 class RemindersPage extends StatefulWidget {
   RemindersPage({super.key});
@@ -22,15 +24,16 @@ class _RemindersPageState extends State<RemindersPage> {
   DateTime? _notifyDate;
   String _repeat = 'None';
   List<Reminder> _reminders = [];
+  List<Reminder> _allReminders = []; // Store all reminders including deleted ones
   String? _editingReminderId;
   final String _storageKey = 'saved_reminders';
 
   final List<String> _repeatOptions = [
     'None',
     'Daily',
-    'Weekly',
+    // 'Weekly',
     'Monthly',
-    'Yearly',
+    // 'Yearly',
   ];
 
   @override
@@ -63,10 +66,74 @@ class _RemindersPageState extends State<RemindersPage> {
     return 'DEVC-unknown';
   }
 
+  // Create notification from reminder
+  Future<void> _createNotificationFromReminder(Reminder reminder) async {
+    try {
+      final notificationDb = NotificationDatabase();
+      
+      // Generate unique notification ID from reminder ID
+      // Use hash of reminder ID to ensure it's a valid integer
+      final notificationId = reminder.id.hashCode.abs();
+      
+      // Create notification content
+      final content = reminder.note.isNotEmpty 
+          ? reminder.note 
+          : 'Reminder: ${reminder.title}';
+      
+      // Set publish date: if notifyDate is today or earlier, use current time
+      // Otherwise use notifyDate
+      final now = DateTime.now();
+      final today = DateTime(now.year, now.month, now.day);
+      final notifyDateOnly = DateTime(
+        reminder.notifyDate.year,
+        reminder.notifyDate.month,
+        reminder.notifyDate.day,
+      );
+      
+      DateTime publishDate;
+      if (notifyDateOnly.isAtSameMomentAs(today) || notifyDateOnly.isBefore(today)) {
+        // If notify date is today or earlier, publish immediately
+        publishDate = now;
+      } else {
+        // If notify date is in the future, use notifyDate
+        publishDate = reminder.notifyDate;
+      }
+      
+      // Set end publish date based on repeat type
+      DateTime? endPublishDate;
+      if (reminder.repeat == 'Daily') {
+        endPublishDate = null; // Daily reminders don't expire
+      } else if (reminder.repeat == 'Monthly') {
+        endPublishDate = reminder.renewalDate; // Monthly expires on renewal date
+      } else {
+        // For 'None' or other types, set end date to renewal date
+        endPublishDate = reminder.renewalDate;
+      }
+      
+      final notification = Notification(
+        id: notificationId,
+        title: reminder.title,
+        content: content,
+        type: 'reminder',
+        publishDate: publishDate,
+        endPublishDate: endPublishDate,
+        status: 'active',
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+      );
+      
+      await notificationDb.saveNotification(notification);
+      debugPrint('Notification created for reminder: ${reminder.title} (repeat: ${reminder.repeat}, publishDate: $publishDate)');
+    } catch (e) {
+      debugPrint('Error creating notification from reminder: $e');
+      // Don't show error to user, just log it
+    }
+  }
+
   Future<void> _submitReminderToAPI(Reminder reminder) async {
     try {
       final deviceId = await _getDeviceId();
-      final apiUrl = 'https://willowinsurance.ca/wp-json/gf-custom/v1/submit';
+      final apiUrl = 'https://willowinsurance.youare.ninja/wp-json/gf-custom/v1/submit';
       
       // Format dates as YYYY-MM-DD
       final renewalDateStr = DateFormat('yyyy-MM-dd').format(reminder.renewalDate);
@@ -124,14 +191,113 @@ class _RemindersPageState extends State<RemindersPage> {
       final remindersJson = prefs.getString(_storageKey);
       if (remindersJson != null && remindersJson.isNotEmpty) {
         final List<dynamic> decoded = json.decode(remindersJson) as List<dynamic>;
+        // Load ALL reminders including deleted ones
+        _allReminders = decoded
+            .map((item) => Reminder.fromJson(item as Map<String, dynamic>))
+            .toList();
+
+        // Filter out deleted web reminders for display
+        List<Reminder> loadedReminders = _allReminders.where((r) => !r.isDeleted).toList();
+
+        final now = DateTime.now();
+        final today = DateTime(now.year, now.month, now.day);
+        List<Reminder> processedReminders = [];
+
+        // Track Daily reminders by title+source to avoid duplicates
+        final Map<String, Reminder> dailyRemindersMap = {};
+        
+        for (var reminder in loadedReminders) {
+          if (reminder.repeat == 'Daily') {
+            // For Daily: always show reminder for today or later
+            final renewalDateOnly = DateTime(
+              reminder.renewalDate.year,
+              reminder.renewalDate.month,
+              reminder.renewalDate.day,
+            );
+            
+            // Create unique key for this daily reminder (title + source)
+            final reminderKey = '${reminder.title}_${reminder.source}';
+            
+            // If reminder is for today or later, always show it
+            if (renewalDateOnly.isAtSameMomentAs(today) || renewalDateOnly.isAfter(today)) {
+              // Keep the one with earliest date, or replace if this one is earlier
+              if (!dailyRemindersMap.containsKey(reminderKey) ||
+                  dailyRemindersMap[reminderKey]!.renewalDate.isAfter(renewalDateOnly)) {
+                dailyRemindersMap[reminderKey] = reminder;
+              }
+            } else {
+              // If reminder date has passed, create one for today if not exists
+              if (!dailyRemindersMap.containsKey(reminderKey)) {
+                final newReminder = Reminder(
+                  id: '${reminder.id}_${today.millisecondsSinceEpoch}',
+                  title: reminder.title,
+                  renewalDate: today,
+                  notifyDate: today,
+                  repeat: 'Daily',
+                  note: reminder.note,
+                  createdAt: DateTime.now(),
+                  source: reminder.source,
+                );
+                dailyRemindersMap[reminderKey] = newReminder;
+                // Also add to _allReminders (will be saved later)
+                _allReminders.add(newReminder);
+                // Create notification for this daily reminder
+                _createNotificationFromReminder(newReminder);
+              }
+            }
+          } else if (reminder.repeat == 'Monthly') {
+            // For Monthly: only show if renewal date hasn't passed
+            final renewalDateOnly = DateTime(
+              reminder.renewalDate.year,
+              reminder.renewalDate.month,
+              reminder.renewalDate.day,
+            );
+            
+            if (renewalDateOnly.isAtSameMomentAs(today) || renewalDateOnly.isAfter(today)) {
+              processedReminders.add(reminder);
+            }
+            // If renewal date has passed, don't add it (it will be removed)
+          } else {
+            // For 'None' or other types, keep as is
+            processedReminders.add(reminder);
+          }
+        }
+        
+        // Add all Daily reminders from map to processed list
+        processedReminders.addAll(dailyRemindersMap.values);
+
         if (mounted) {
           setState(() {
-            _reminders = decoded
-                .map((item) => Reminder.fromJson(item as Map<String, dynamic>))
-                .toList();
+            _reminders = processedReminders;
             // Sort by renewal date, earliest first
             _reminders.sort((a, b) => a.renewalDate.compareTo(b.renewalDate));
+            
+            // Update _allReminders: keep deleted ones, update/remove others
+            // Remove old non-deleted reminders and add new processed ones
+            _allReminders = _allReminders.where((r) => r.isDeleted).toList();
+            _allReminders.addAll(processedReminders);
           });
+          // Save all reminders (including deleted) back
+          _saveReminders();
+          
+          // Create notifications for all reminders that should be notified today or earlier
+          // This applies to all repeat types: None, Daily, Monthly
+          final now = DateTime.now();
+          final today = DateTime(now.year, now.month, now.day);
+          
+          for (var reminder in processedReminders) {
+            final notifyDateOnly = DateTime(
+              reminder.notifyDate.year,
+              reminder.notifyDate.month,
+              reminder.notifyDate.day,
+            );
+            
+            // Create notification if notify date is today or earlier
+            // This works for all repeat types: None, Daily, Monthly
+            if (notifyDateOnly.isAtSameMomentAs(today) || notifyDateOnly.isBefore(today)) {
+              _createNotificationFromReminder(reminder);
+            }
+          }
         }
       }
     } catch (e) {
@@ -147,8 +313,9 @@ class _RemindersPageState extends State<RemindersPage> {
   Future<void> _saveReminders() async {
     try {
       final prefs = await SharedPreferences.getInstance();
+      // Save ALL reminders including deleted ones
       final remindersJson = json.encode(
-        _reminders.map((reminder) => reminder.toJson()).toList(),
+        _allReminders.map((reminder) => reminder.toJson()).toList(),
       );
       await prefs.setString(_storageKey, remindersJson);
     } catch (e) {
@@ -251,7 +418,7 @@ class _RemindersPageState extends State<RemindersPage> {
         // Update existing reminder
         final index = _reminders.indexWhere((reminder) => reminder.id == _editingReminderId);
         if (index != -1) {
-          _reminders[index] = _reminders[index].copyWith(
+          final updatedReminder = _reminders[index].copyWith(
             title: _titleController.text.trim(),
             renewalDate: _renewalDate!,
             notifyDate: _notifyDate!,
@@ -259,6 +426,13 @@ class _RemindersPageState extends State<RemindersPage> {
             note: _noteController.text.trim(),
             updatedAt: DateTime.now(),
           );
+          _reminders[index] = updatedReminder;
+          
+          // Also update in _allReminders
+          final allIndex = _allReminders.indexWhere((r) => r.id == _editingReminderId);
+          if (allIndex != -1) {
+            _allReminders[allIndex] = updatedReminder;
+          }
         }
         _editingReminderId = null;
       } else {
@@ -271,8 +445,13 @@ class _RemindersPageState extends State<RemindersPage> {
           repeat: _repeat,
           note: _noteController.text.trim(),
           createdAt: DateTime.now(),
+          source: 'user', // Explicitly set as user-created
         );
         _reminders.insert(0, newReminder);
+        _allReminders.insert(0, newReminder); // Also add to all reminders list
+        
+        // Create notification for this reminder
+        _createNotificationFromReminder(newReminder);
         
         // Submit to API
         _submitReminderToAPI(newReminder);
@@ -292,7 +471,23 @@ class _RemindersPageState extends State<RemindersPage> {
 
   void _deleteReminder(String reminderId) {
     setState(() {
-      _reminders.removeWhere((reminder) => reminder.id == reminderId);
+      final index = _reminders.indexWhere((reminder) => reminder.id == reminderId);
+      if (index != -1) {
+        final reminder = _reminders[index];
+        if (reminder.source == 'web') {
+          // For web reminders: soft delete (mark as deleted but keep in storage)
+          final allIndex = _allReminders.indexWhere((r) => r.id == reminderId);
+          if (allIndex != -1) {
+            _allReminders[allIndex] = reminder.copyWith(isDeleted: true);
+          }
+          // Remove from display list
+          _reminders.removeAt(index);
+        } else {
+          // For user reminders: hard delete (remove completely from both lists)
+          _reminders.removeAt(index);
+          _allReminders.removeWhere((r) => r.id == reminderId);
+        }
+      }
     });
     _saveReminders();
   }
@@ -332,7 +527,7 @@ class _RemindersPageState extends State<RemindersPage> {
           // Header like about_us page
           Container(
             width: double.infinity,
-            padding: EdgeInsets.fromLTRB(30, 40, 30, 20),
+            padding: EdgeInsets.fromLTRB(30, 60, 30, 20),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.only(
                 bottomLeft: Radius.circular(50.0),

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_html/flutter_html.dart';
-import 'package:url_launcher/url_launcher.dart';
+import 'webview_page.dart';
 import '../../../services/data_service.dart';
 import '../../../models/data_init_model.dart';
 import '../../../utils/log_util.dart';
@@ -27,12 +27,33 @@ class _ResourcesPageState extends State<ResourcesPage> {
   }
 
 
-  Future<void> _launchURL(String url, String title) async {
-    await LogUtil.saveLog('Opening resource $title');
-    final Uri uri = Uri.parse(url);
-    if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
-      throw Exception('Could not launch $url');
+  Future<void> _launchURL(BuildContext context, String url, String title) async {
+    // Validate URL
+    final trimmedUrl = url.trim();
+    if (trimmedUrl.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Invalid URL for $title'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
     }
+
+    print('Opening resource $title');
+    print('url: $trimmedUrl');
+    
+    // Navigate immediately without waiting for log
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => WebViewPage(url: trimmedUrl, title: title),
+      ),
+    );
+    // Log in background (fire and forget) - don't block navigation
+    LogUtil.saveLog('Opening resource $title').catchError((e) {
+      // Silently handle errors, logging should not affect user experience
+    });
   }
 
   @override
@@ -130,7 +151,7 @@ class _ResourcesPageState extends State<ResourcesPage> {
                         color: Color(0xFFffffff),
                         elevation: 1,
                         child: InkWell(
-                          onTap: () => _launchURL(resource.link, resource.title),
+                          onTap: () => _launchURL(context, resource.link, resource.title),
                           borderRadius: BorderRadius.circular(16.0),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -203,7 +224,7 @@ class _ResourcesPageState extends State<ResourcesPage> {
                                         SizedBox(width: 8.0),
                                         Expanded(
                                           child: GestureDetector(
-                                            onTap: () => _launchURL(resource.link, resource.title),
+                                            onTap: () => _launchURL(context, resource.link, resource.title),
                                             child: Text(
                                               resource.title,
                                               style: TextStyle(

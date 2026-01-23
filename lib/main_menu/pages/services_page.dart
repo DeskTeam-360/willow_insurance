@@ -65,13 +65,17 @@ class _ServicesPageState extends State<ServicesPage> {
   List<MobileService> get services => _services;
 
   Future<void> _openWebView(BuildContext context, String url, String title) async {
-    await LogUtil.saveLog('Opening service $title');
+    // Navigate immediately without waiting for log
     Navigator.push(
       context,
       MaterialPageRoute(
         builder: (context) => WebViewPage(url: url, title: title),
       ),
     );
+    // Log in background (fire and forget) - don't block navigation
+    LogUtil.saveLog('Opening service $title').catchError((e) {
+      // Silently handle errors, logging should not affect user experience
+    });
   }
 
   @override
@@ -110,7 +114,7 @@ class _ServicesPageState extends State<ServicesPage> {
           ),
            SizedBox(height: 15),
            Text(
-             'We simplify insurance',
+             'We Simplify Insurance',
              textAlign: TextAlign.center,
              style: TextStyle(
                fontSize: 24,
@@ -292,9 +296,11 @@ class _ServicesPageState extends State<ServicesPage> {
                             top: 0,
                             right: 0,
                             child: GestureDetector(
-                              onTap: () {
-                                // Empty tap handler
-                              },
+                              onTap: () => _openWebView(
+                      context,
+                      service.link,
+                      service.title,
+                    ),
                               child: Container(
                                 width: 80,
                                 height: 35,

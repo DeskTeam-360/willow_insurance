@@ -1,0 +1,45 @@
+db di flutter
+TABLE notification_state
+------------------------
+notification_id (int, primary key)
+is_read (boolean)
+is_hidden (boolean)
+
+ini ada tambahan data yang akan dikirim saat init bersama (splash_screen.date _loadData)
+notifications
+id (int, primary key)
+title (varchar)
+content (text)
+type (varchar)             
+publish_date (datetime)
+end_publish_date (datetime)
+status (enum: draft, active, stop)
+created_at (datetime)
+updated_at (datetime)
+
+logika penyimpanan {
+IF notification_id NOT EXISTS in notification_state
+    INSERT notification_state (notification_id, is_read=false, is_hidden=false)
+
+IF is_hidden = true
+    SKIP
+
+SHOW notification
+}
+
+
+logika read {
+    UPDATE notification_state
+SET is_read = true
+WHERE notification_id = X
+
+}
+
+logika delete{
+    UPDATE notification_state
+SET is_hidden = true
+WHERE notification_id = X
+
+}
+
+gunakan SQLite

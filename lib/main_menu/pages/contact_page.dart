@@ -234,7 +234,7 @@ class _ContactPageState extends State<ContactPage> with SingleTickerProviderStat
           ),
           Column(
             children: [
-              SizedBox(height: 50),
+              SizedBox(height: 60),
               // Logo
               Center(
                 child: Image.asset(
@@ -1004,7 +1004,7 @@ class _BookAppointmentTabContentState extends State<BookAppointmentTabContent> {
         } else {
           // Fallback to WebView if can't launch externally
           if (mounted) {
-            await LogUtil.saveLog('Opening appointment link: ${_selectedAppointment!.appointmentLink}');
+           
             Navigator.push(
               context,
               MaterialPageRoute(
@@ -1014,6 +1014,10 @@ class _BookAppointmentTabContentState extends State<BookAppointmentTabContent> {
                 ),
               ),
             );
+            // Log in background (fire and forget) - don't block navigation
+            LogUtil.saveLog('Opening appointment link').catchError((e) {
+              // Silently handle errors, logging should not affect user experience
+            });
           }
         }
       } catch (e) {

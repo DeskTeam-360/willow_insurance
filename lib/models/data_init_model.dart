@@ -1,14 +1,18 @@
+import 'notification_model.dart';
+
 class DataInit {
   final List<VideoGuide> videoGuide;
   final List<MobileService> mobileService;
   final List<Resource> resource;
   final List<BookAppointment> bookAppointment;
+  final List<Notification> notifications;
 
   DataInit({
     required this.videoGuide,
     required this.mobileService,
     required this.resource,
     required this.bookAppointment,
+    required this.notifications,
   });
 
   factory DataInit.fromJson(Map<String, dynamic> json) {
@@ -29,6 +33,10 @@ class DataInit {
               ?.map((item) => BookAppointment.fromJson(item as Map<String, dynamic>))
               .toList() ??
           [],
+      notifications: (json['notifications'] as List<dynamic>?)
+              ?.map((item) => Notification.fromJson(item as Map<String, dynamic>))
+              .toList() ??
+          [],
     );
   }
 
@@ -38,6 +46,7 @@ class DataInit {
       'mobile_service': mobileService.map((item) => item.toJson()).toList(),
       'resource': resource.map((item) => item.toJson()).toList(),
       'book_appointment': bookAppointment.map((item) => item.toJson()).toList(),
+      'notifications': notifications.map((item) => item.toJson()).toList(),
     };
   }
 }

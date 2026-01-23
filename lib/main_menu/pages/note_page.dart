@@ -166,7 +166,7 @@ class _NotePageState extends State<NotePage> {
           // Header like about_us page
           Container(
             width: double.infinity,
-            padding: EdgeInsets.fromLTRB(30, 40, 30, 20),
+            padding: EdgeInsets.fromLTRB(30, 60, 30, 20),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.only(
                 bottomLeft: Radius.circular(50.0),

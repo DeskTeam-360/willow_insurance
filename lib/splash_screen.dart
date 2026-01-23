@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'home_page.dart';
 import 'services/data_service.dart';
+import 'services/notification_database.dart';
 
 class SplashPage extends StatefulWidget {
   @override
@@ -83,6 +84,13 @@ class _SplashPageState extends State<SplashPage>
         print('Mobile services: ${dataService.cachedData!.mobileService.length}');
         print('Resources: ${dataService.cachedData!.resource.length}');
         print('Book appointments: ${dataService.cachedData!.bookAppointment.length}');
+        
+        // Save notifications to database
+        if (dataService.cachedData!.notifications.isNotEmpty) {
+          final notificationDb = NotificationDatabase();
+          await notificationDb.saveNotifications(dataService.cachedData!.notifications);
+          print('Notifications saved: ${dataService.cachedData!.notifications.length}');
+        }
       }
     } catch (e) {
       print('Error loading data: $e');

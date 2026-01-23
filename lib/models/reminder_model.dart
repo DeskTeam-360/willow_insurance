@@ -7,6 +7,8 @@ class Reminder {
   final String note;
   final DateTime createdAt;
   final DateTime? updatedAt;
+  final String source; // 'user' or 'web'
+  final bool isDeleted; // For web reminders, soft delete flag
 
   Reminder({
     required this.id,
@@ -17,6 +19,8 @@ class Reminder {
     required this.note,
     required this.createdAt,
     this.updatedAt,
+    this.source = 'user', // Default to 'user' for backward compatibility
+    this.isDeleted = false,
   });
 
   Map<String, dynamic> toJson() {
@@ -29,6 +33,8 @@ class Reminder {
       'note': note,
       'createdAt': createdAt.toIso8601String(),
       'updatedAt': updatedAt?.toIso8601String(),
+      'source': source,
+      'isDeleted': isDeleted,
     };
   }
 
@@ -44,6 +50,8 @@ class Reminder {
       updatedAt: json['updatedAt'] != null
           ? DateTime.parse(json['updatedAt'] as String)
           : null,
+      source: json['source'] as String? ?? 'user',
+      isDeleted: json['isDeleted'] as bool? ?? false,
     );
   }
 
@@ -56,6 +64,8 @@ class Reminder {
     String? note,
     DateTime? createdAt,
     DateTime? updatedAt,
+    String? source,
+    bool? isDeleted,
   }) {
     return Reminder(
       id: id ?? this.id,
@@ -66,6 +76,8 @@ class Reminder {
       note: note ?? this.note,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
+      source: source ?? this.source,
+      isDeleted: isDeleted ?? this.isDeleted,
     );
   }
 }

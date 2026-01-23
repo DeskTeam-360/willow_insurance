@@ -12,7 +12,7 @@ class AboutUsPage extends StatelessWidget {
         children: [
           Container(
             width: double.infinity,
-            padding: EdgeInsets.fromLTRB(30, 40, 30, 20),
+            padding: EdgeInsets.fromLTRB(30, 60, 30, 20),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.only(bottomLeft: Radius.circular(50.0), bottomRight: Radius.circular(50.0)),
               color: Color(0xFF71A33F)
@@ -157,7 +157,7 @@ class AboutUsPage extends StatelessWidget {
                               ),
                               decoration: BoxDecoration(),
                               child: Text(
-                                'Owner/Broker',
+                                'Founder & CEO',
                                 style: TextStyle(
                                   fontSize: 14,
                                   fontWeight: FontWeight.bold,
