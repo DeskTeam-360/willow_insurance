@@ -50,7 +50,9 @@ function api_data_init(WP_REST_Request $request) {
         'fields' => [
             'order',
             'link',
-			'short_description'
+            'short_description',
+            'group_type',
+            'group_layout',
         ]
     ], function($post_id, $fields) {
         return [
@@ -59,6 +61,8 @@ function api_data_init(WP_REST_Request $request) {
             'order'          => intval($fields['order'] ?? 0),
             'link'           => $fields['link'] ?? '',
             'short_description' => $fields['short_description'] ?? '',
+            'group_type'     => $fields['group_type'] ?? '',
+            'group_layout'   => $fields['group_layout'] ?? '',
         ];
     });
 

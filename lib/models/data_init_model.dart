@@ -83,12 +83,23 @@ class VideoGuide {
   }
 }
 
+/// How cards are laid out within a [groupType] section.
+enum ServiceGroupLayout {
+  /// One full-width card per row (e.g. Auto & Home).
+  fullWidth,
+  /// Two cards per row (e.g. Health / Travel).
+  twoColumn,
+}
+
 class MobileService {
   final String title;
   final dynamic featuredImage; // Can be String or false
   final int order;
   final String link;
   final String shortDescription;
+  final String groupType;
+  /// ACF/API: `full_width` | `two_column` (empty = infer from group name in app).
+  final String groupLayout;
 
   MobileService({
     required this.title,
@@ -96,6 +107,8 @@ class MobileService {
     required this.order,
     required this.link,
     required this.shortDescription,
+    this.groupType = '',
+    this.groupLayout = '',
   });
 
   factory MobileService.fromJson(Map<String, dynamic> json) {
@@ -105,6 +118,8 @@ class MobileService {
       order: json['order'] as int? ?? 0,
       link: json['link'] as String? ?? '',
       shortDescription: json['short_description'] as String? ?? '',
+      groupType: json['group_type'] as String? ?? '',
+      groupLayout: json['group_layout'] as String? ?? '',
     );
   }
 
@@ -114,6 +129,9 @@ class MobileService {
       'featured_image': featuredImage,
       'order': order,
       'link': link,
+      'short_description': shortDescription,
+      'group_type': groupType,
+      'group_layout': groupLayout,
     };
   }
 }
