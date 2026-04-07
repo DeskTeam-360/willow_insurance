@@ -99,7 +99,7 @@ class _ResourcesPageState extends State<ResourcesPage> {
               ],
             ),
           ),
-           SizedBox(height: 15),
+           SizedBox(height: 20),
            Text(
              'Useful Resources',
              style: TextStyle(
@@ -307,6 +307,7 @@ class _ResourcesPageState extends State<ResourcesPage> {
                     },
                   ),
           ),
+          SizedBox(height: 50),
         ],
       ),
         ]

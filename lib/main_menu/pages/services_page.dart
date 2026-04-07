@@ -25,7 +25,7 @@ class _ServicesPageState extends State<ServicesPage> {
 
   Future<void> _loadServices() async {
     final dataService = DataService();
-    
+
     // Check if data is already cached
     if (dataService.isDataLoaded) {
       _updateServices(dataService.cachedData);
@@ -34,7 +34,7 @@ class _ServicesPageState extends State<ServicesPage> {
       setState(() {
         _isLoading = true;
       });
-      
+
       try {
         final data = await dataService.fetchData();
         _updateServices(data);
@@ -64,7 +64,11 @@ class _ServicesPageState extends State<ServicesPage> {
 
   List<MobileService> get services => _services;
 
-  Future<void> _openWebView(BuildContext context, String url, String title) async {
+  Future<void> _openWebView(
+    BuildContext context,
+    String url,
+    String title,
+  ) async {
     // Navigate immediately without waiting for log
     Navigator.push(
       context,
@@ -87,12 +91,15 @@ class _ServicesPageState extends State<ServicesPage> {
           Container(
             width: double.infinity,
             padding: EdgeInsets.fromLTRB(10, 30, 10, 10),
-            
+
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.only(bottomLeft: Radius.circular(30.0), bottomRight: Radius.circular(30.0)),
-              color: Color(0xFF71A33F)
+              borderRadius: BorderRadius.only(
+                bottomLeft: Radius.circular(30.0),
+                bottomRight: Radius.circular(30.0),
+              ),
+              color: Color(0xFF71A33F),
             ),
-            
+
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -108,21 +115,20 @@ class _ServicesPageState extends State<ServicesPage> {
                 //   ),
                 // ),
                 SizedBox(height: 15),
-
               ],
             ),
           ),
-           SizedBox(height: 15),
-           Text(
-             'We Simplify Insurance',
-             textAlign: TextAlign.center,
-             style: TextStyle(
-               fontSize: 24,
-               fontWeight: FontWeight.bold,
-               color: Color(0xFF497844),
-             ),
-           ),
-           
+          SizedBox(height: 20),
+          Text(
+            'We Simplify Insurance',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+              color: Color(0xFF497844),
+            ),
+          ),
+
           Expanded(
             child: _isLoading
                 ? Center(
@@ -135,7 +141,9 @@ class _ServicesPageState extends State<ServicesPage> {
                         ),
                         SizedBox(height: 30),
                         CircularProgressIndicator(
-                          valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF71A33F)),
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            Color(0xFF71A33F),
+                          ),
                         ),
                         SizedBox(height: 16),
                         Text(
@@ -149,200 +157,250 @@ class _ServicesPageState extends State<ServicesPage> {
                     ),
                   )
                 : services.isEmpty
-                    ? Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(Icons.inbox, size: 64, color: Colors.grey[400]),
-                            SizedBox(height: 16),
-                            Text(
-                              'No services available',
-                              style: TextStyle(
-                                fontSize: 16,
-                                color: Colors.grey[600],
-                              ),
-                            ),
-                          ],
+                ? Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.inbox, size: 64, color: Colors.grey[400]),
+                        SizedBox(height: 16),
+                        Text(
+                          'No services available',
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: Colors.grey[600],
+                          ),
                         ),
-                      )
-                    : ListView.builder(
-              padding: EdgeInsets.all(16.0),
-              itemCount: services.length,
-              itemBuilder: (context, index) {
-                final service = services[index];
-                final hasFeaturedImage =
-                    service.featuredImage != null &&
-                    service.featuredImage != false &&
-                    service.featuredImage.toString().isNotEmpty;
-                final featuredImageStr = hasFeaturedImage
-                    ? service.featuredImage.toString()
-                    : '';
-                final isNetworkImage = hasFeaturedImage &&
-                    featuredImageStr.startsWith('http');
-
-                return Card(
-                  margin: EdgeInsets.only(bottom: 16.0),
-                  elevation: 1,
-                  color: Color(0xFFffffff),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16.0),
-                  ),
-                  child: InkWell(
-                    onTap: () => _openWebView(
-                      context,
-                      service.link,
-                      service.title,
+                      ],
                     ),
-                    borderRadius: BorderRadius.circular(16.0),
-                    child: Padding(
-                      padding: EdgeInsets.all(20.0),
-                      child: Stack(
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.end,
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Container(
-                                width: 100,
-                                // height: 60,
-                                alignment: Alignment.center,
-                                decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(12.0),
-                                ),
-                                child: hasFeaturedImage
-                                    ? (isNetworkImage
-                                        ? Image.network(
-                                            featuredImageStr,
-                                            loadingBuilder: (context, child, loadingProgress) {
-                                              if (loadingProgress == null) {
-                                                return child;
-                                              }
-                                              return Center(
-                                                child: CircularProgressIndicator(
-                                                  value: loadingProgress.expectedTotalBytes != null
-                                                      ? loadingProgress.cumulativeBytesLoaded /
-                                                          loadingProgress.expectedTotalBytes!
-                                                      : null,
-                                                  valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF71A33F)),
-                                                  strokeWidth: 2,
-                                                ),
-                                              );
-                                            },
-                                            errorBuilder: (context, error, stackTrace) {
-                                              return Icon(
-                                                Icons.image_not_supported,
-                                                color: Colors.grey,
-                                              );
-                                            },
-                                          )
-                                        : Image.asset(
-                                            featuredImageStr,
-                                            errorBuilder: (context, error, stackTrace) {
-                                              return Icon(
-                                                Icons.image_not_supported,
-                                                color: Colors.grey,
-                                              );
-                                            },
-                                          ))
-                                    : Icon(
-                                        Icons.image_not_supported,
-                                        color: Colors.grey,
-                                      ),
-                              ),
-                              SizedBox(width: 16.0),
-                              Expanded(
-                                child: Column(
+                  )
+                : ListView.builder(
+                    padding: EdgeInsets.all(16.0),
+                    itemCount: services.length,
+                    itemBuilder: (context, index) {
+                      final service = services[index];
+                      final hasFeaturedImage =
+                          service.featuredImage != null &&
+                          service.featuredImage != false &&
+                          service.featuredImage.toString().isNotEmpty;
+                      final featuredImageStr = hasFeaturedImage
+                          ? service.featuredImage.toString()
+                          : '';
+                      final isNetworkImage =
+                          hasFeaturedImage &&
+                          featuredImageStr.startsWith('http');
+
+                      return Card(
+                        margin: EdgeInsets.only(bottom: 16.0),
+                        elevation: 1,
+                        color: Color(0xFFffffff),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16.0),
+                        ),
+                        child: InkWell(
+                          onTap: () => _openWebView(
+                            context,
+                            service.link,
+                            service.title,
+                          ),
+                          borderRadius: BorderRadius.circular(16.0),
+                          child: Padding(
+                            padding: EdgeInsets.all(20.0),
+                            child: Stack(
+                              children: [
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.end,
                                   crossAxisAlignment: CrossAxisAlignment.start,
-                                  mainAxisSize: MainAxisSize.min,
                                   children: [
-                                  
-                                  ],
-                                )
-                              ),
-                              
-                            
-                            ],
-                          ),
-
-                          Padding(
-                            padding: EdgeInsets.only(left: 0.0, right: 0.0, top: 40.0, bottom: 0.0),
-                            child: 
-                          Html(
-                                      data: service.shortDescription,
-                                      style: {
-                                        "body": Style(
-                                          fontSize: FontSize(14),
-                                          // color: Colors.grey[600],
-                                          margin: Margins.zero,
-                                          padding: HtmlPaddings.zero,
+                                    Container(
+                                      constraints: BoxConstraints(
+                                        maxWidth: 200,
+                                        maxHeight: 40,
+                                      ),
+                                      alignment: Alignment.centerLeft,
+                                      decoration: BoxDecoration(
+                                        borderRadius: BorderRadius.circular(
+                                          12.0,
                                         ),
-                                        "p": Style(
-                                          margin: Margins.zero,
-                                          padding: HtmlPaddings.zero,
-                                        ),
-                                        "ul": Style(
-                                          margin: Margins.only(left: 15.0),
-                                          padding: HtmlPaddings.zero,
-                                        ),
-                                        "li": Style(
-                                          margin: Margins.zero,
-                                          padding: HtmlPaddings.zero,
-                                        ),
-                                      },
+                                      ),
+                                      child: hasFeaturedImage
+                                          ? (isNetworkImage
+                                                ? Image.network(
+                                                    featuredImageStr,
+                                                    fit: BoxFit.contain,
+                                                    alignment: Alignment.center,
+                                                    loadingBuilder:
+                                                        (
+                                                          context,
+                                                          child,
+                                                          loadingProgress,
+                                                        ) {
+                                                          if (loadingProgress ==
+                                                              null) {
+                                                            return child;
+                                                          }
+                                                          return Center(
+                                                            child: CircularProgressIndicator(
+                                                              value:
+                                                                  loadingProgress
+                                                                          .expectedTotalBytes !=
+                                                                      null
+                                                                  ? loadingProgress
+                                                                            .cumulativeBytesLoaded /
+                                                                        loadingProgress
+                                                                            .expectedTotalBytes!
+                                                                  : null,
+                                                              valueColor:
+                                                                  AlwaysStoppedAnimation<
+                                                                    Color
+                                                                  >(
+                                                                    Color(
+                                                                      0xFF71A33F,
+                                                                    ),
+                                                                  ),
+                                                              strokeWidth: 2,
+                                                            ),
+                                                          );
+                                                        },
+                                                    errorBuilder:
+                                                        (
+                                                          context,
+                                                          error,
+                                                          stackTrace,
+                                                        ) {
+                                                          return Icon(
+                                                            Icons
+                                                                .image_not_supported,
+                                                            color: Colors.grey,
+                                                          );
+                                                        },
+                                                  )
+                                                : Image.asset(
+                                                    featuredImageStr,
+                                                    fit: BoxFit.contain,
+                                                    alignment: Alignment.center,
+                                                    errorBuilder:
+                                                        (
+                                                          context,
+                                                          error,
+                                                          stackTrace,
+                                                        ) {
+                                                          return Icon(
+                                                            Icons
+                                                                .image_not_supported,
+                                                            color: Colors.grey,
+                                                          );
+                                                        },
+                                                  ))
+                                          : Icon(
+                                              Icons.image_not_supported,
+                                              color: Colors.grey,
+                                            ),
                                     ),
-                          ),
-
-                          Positioned(
-                            top: 0,
-                            right: 0,
-                            child: GestureDetector(
-                              onTap: () => _openWebView(
-                      context,
-                      service.link,
-                      service.title,
-                    ),
-                              child: Container(
-                                width: 80,
-                                height: 35,
-                                padding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                                decoration: BoxDecoration(
-                                  color: Color(0xFFDFFEB9),
-                                  borderRadius: BorderRadius.circular(10),
+                                    SizedBox(width: 16.0),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [],
+                                      ),
+                                    ),
+                                  ],
                                 ),
-                                child: Center(
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    crossAxisAlignment: CrossAxisAlignment.center,
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Text(
-                                        'Open',
-                                        style: TextStyle(color: Color(0xFF497844), fontSize: 14, fontWeight: FontWeight.w600),
+
+                                Padding(
+                                  padding: EdgeInsets.only(
+                                    left: 0.0,
+                                    right: 0.0,
+                                    top: 50.0,
+                                    bottom: 0.0,
+                                  ),
+                                  child: Html(
+                                    data: service.shortDescription,
+                                    style: {
+                                      "body": Style(
+                                        fontSize: FontSize(14),
+                                        // color: Colors.grey[600],
+                                        margin: Margins.zero,
+                                        padding: HtmlPaddings.zero,
                                       ),
-                                      Expanded(child: SizedBox(width: 5)),
-                                      SvgPicture.asset(
-                                        'assets/images/arrow.svg',
-                                        width: 12,
-                                        height: 12,
-                                        colorFilter: ColorFilter.mode(
-                                          Color(0xFF497844),
-                                          BlendMode.srcIn,
-                                        ),
+                                      "p": Style(
+                                        margin: Margins.zero,
+                                        padding: HtmlPaddings.zero,
                                       ),
-                                    ],
+                                      "ul": Style(
+                                        margin: Margins.only(left: 15.0),
+                                        padding: HtmlPaddings.zero,
+                                      ),
+                                      "li": Style(
+                                        margin: Margins.zero,
+                                        padding: HtmlPaddings.zero,
+                                      ),
+                                    },
                                   ),
                                 ),
-                              ),
+
+                                Positioned(
+                                  top: 0,
+                                  right: 0,
+                                  child: GestureDetector(
+                                    onTap: () => _openWebView(
+                                      context,
+                                      service.link,
+                                      service.title,
+                                    ),
+                                    child: Container(
+                                      width: 80,
+                                      height: 35,
+                                      padding: EdgeInsets.symmetric(
+                                        horizontal: 10,
+                                        vertical: 5,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: Color(0xFFDFFEB9),
+                                        borderRadius: BorderRadius.circular(10),
+                                      ),
+                                      child: Center(
+                                        child: Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.center,
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.center,
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Text(
+                                              'Open',
+                                              style: TextStyle(
+                                                color: Color(0xFF497844),
+                                                fontSize: 14,
+                                                fontWeight: FontWeight.w600,
+                                              ),
+                                            ),
+                                            Expanded(child: SizedBox(width: 5)),
+                                            SvgPicture.asset(
+                                              'assets/images/arrow.svg',
+                                              width: 12,
+                                              height: 12,
+                                              colorFilter: ColorFilter.mode(
+                                                Color(0xFF497844),
+                                                BlendMode.srcIn,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
-                        ],
-                      ),
-                    ),
+                        ),
+                      );
+                    },
                   ),
-                );
-              },
-            ),
           ),
+          SizedBox(height: 50),
         ],
       ),
     );
