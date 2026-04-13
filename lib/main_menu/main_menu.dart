@@ -78,7 +78,7 @@ class _MainMenuState extends State<MainMenu> {
                 ),
                 Container(
                   padding: EdgeInsets.all(3),
-                  child: SvgPicture.asset('assets/images/main_menu_carousel/services_icon3.svg', width: 20, height: 20, colorFilter: ColorFilter.mode(Color(0xFFDFFEB9), BlendMode.srcIn)),
+                  child: SvgPicture.asset('assets/images/main_menu_carousel/my_sgi_g2.svg', width: 20, height: 20, colorFilter: ColorFilter.mode(Color(0xFFDFFEB9), BlendMode.srcIn)),
                 ),
                 Container(
                   padding: EdgeInsets.all(3),

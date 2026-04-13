@@ -246,7 +246,7 @@ class _HomePageState extends State<HomePage> {
                 //         bottom: 35,
                 //         left: 20,
                 //         child: SvgPicture.asset(
-                //           'assets/images/main_menu_carousel/services_icon3.svg',
+                //           'assets/images/main_menu_carousel/my_sgi_g2.svg',
                 //           width: 40,
                 //           height: 40,
                 //           colorFilter: ColorFilter.mode(
