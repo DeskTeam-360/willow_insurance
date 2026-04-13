@@ -102,6 +102,10 @@ class MobileService {
   /// Warna strip kiri kartu layanan. Dari API: `accent_color`, `card_accent_color`, atau `color`.
   /// String hex (`#RRGGBB`, `RRGGBB`, `#AARRGGBB`) atau int ARGB (contoh `0xFF6DA544`).
   final Color? accentColor;
+  /// Dari API: `group_type` — header section di halaman Services.
+  final String groupType;
+  /// Dari API: `group_layout` — mis. `two_column` vs full width.
+  final String groupLayout;
 
   MobileService({
     required this.title,
@@ -110,6 +114,8 @@ class MobileService {
     required this.link,
     required this.shortDescription,
     this.accentColor,
+    this.groupType = '',
+    this.groupLayout = '',
   });
 
   static Color? _parseAccentColor(dynamic value) {
@@ -145,6 +151,8 @@ class MobileService {
             json['card_accent_color'] ??
             json['color'],
       ),
+      groupType: json['group_type'] as String? ?? '',
+      groupLayout: json['group_layout'] as String? ?? '',
     );
   }
 
@@ -158,6 +166,8 @@ class MobileService {
       if (accentColor != null)
         'accent_color':
             '#${(accentColor!.toARGB32() & 0xFFFFFF).toRadixString(16).padLeft(6, '0')}',
+      'group_type': groupType,
+      'group_layout': groupLayout,
     };
   }
 }
