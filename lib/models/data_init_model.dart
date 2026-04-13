@@ -1,3 +1,5 @@
+import 'dart:ui' show Color;
+
 import 'notification_model.dart';
 
 class DataInit {
@@ -89,6 +91,9 @@ class MobileService {
   final int order;
   final String link;
   final String shortDescription;
+  /// Warna strip kiri kartu layanan. Dari API: `accent_color`, `card_accent_color`, atau `color`.
+  /// String hex (`#RRGGBB`, `RRGGBB`, `#AARRGGBB`) atau int ARGB (contoh `0xFF6DA544`).
+  final Color? accentColor;
 
   MobileService({
     required this.title,
@@ -96,7 +101,29 @@ class MobileService {
     required this.order,
     required this.link,
     required this.shortDescription,
+    this.accentColor,
   });
+
+  static Color? _parseAccentColor(dynamic value) {
+    if (value == null) return null;
+    if (value is int) return Color(value);
+    if (value is String) {
+      var s = value.trim();
+      if (s.isEmpty) return null;
+      if (s.startsWith('#')) s = s.substring(1);
+      try {
+        if (s.length == 6) {
+          return Color(int.parse('FF$s', radix: 16));
+        }
+        if (s.length == 8) {
+          return Color(int.parse(s, radix: 16));
+        }
+      } catch (_) {
+        return null;
+      }
+    }
+    return null;
+  }
 
   factory MobileService.fromJson(Map<String, dynamic> json) {
     return MobileService(
@@ -105,6 +132,11 @@ class MobileService {
       order: json['order'] as int? ?? 0,
       link: json['link'] as String? ?? '',
       shortDescription: json['short_description'] as String? ?? '',
+      accentColor: _parseAccentColor(
+        json['accent_color'] ??
+            json['card_accent_color'] ??
+            json['color'],
+      ),
     );
   }
 
@@ -114,6 +146,10 @@ class MobileService {
       'featured_image': featuredImage,
       'order': order,
       'link': link,
+      'short_description': shortDescription,
+      if (accentColor != null)
+        'accent_color':
+            '#${(accentColor!.toARGB32() & 0xFFFFFF).toRadixString(16).padLeft(6, '0')}',
     };
   }
 }

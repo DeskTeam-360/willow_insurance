@@ -64,6 +64,250 @@ class _ServicesPageState extends State<ServicesPage> {
 
   List<MobileService> get services => _services;
 
+  static const Color _defaultCardAccentGreen = Color(0xFF6DA544);
+  static const Color _openButtonFill = Color(0xFFDFFEB9);
+  static const Color _logoBorderGreen = Color(0xFF497844);
+  static const double _cardRadius = 15.0;
+  /// Sudut logo badge — lebih moderat dari kapsul penuh (Stadium).
+  static const double _logoBadgeRadius = 15.0;
+
+  Widget _buildLogoPill({
+    required Widget logoChild,
+    required double maxWidth,
+  }) {
+    final logoShape = RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(_logoBadgeRadius),
+      side: BorderSide(color: _logoBorderGreen, width: 1),
+    );
+    return Material(
+      color: Colors.white,
+      elevation: 2,
+      shadowColor: Colors.black26,
+      shape: logoShape,
+      clipBehavior: Clip.antiAlias,
+      child: ConstrainedBox(
+        constraints: BoxConstraints(maxWidth: maxWidth, maxHeight: 44),
+        child: Padding(
+          padding: EdgeInsets.symmetric(horizontal: 5, vertical:5),
+          child: Center(child: logoChild),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildOpenPillButton(BuildContext context, MobileService service) {
+    const openGreen = Color(0xFF497844);
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () => _openWebView(context, service.link, service.title),
+        borderRadius: BorderRadius.circular(10),
+        child: Container(
+          width: 80,
+          height: 35,
+          padding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+          decoration: BoxDecoration(
+            color: _openButtonFill,
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Center(
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'Open',
+                  style: TextStyle(
+                    color: openGreen,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                Expanded(child: SizedBox(width: 5)),
+                SvgPicture.asset(
+                  'assets/images/arrow.svg',
+                  width: 12,
+                  height: 12,
+                  colorFilter: ColorFilter.mode(
+                    openGreen,
+                    BlendMode.srcIn,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildServiceCard(BuildContext context, MobileService service) {
+    final hasFeaturedImage = service.featuredImage != null &&
+        service.featuredImage != false &&
+        service.featuredImage.toString().isNotEmpty;
+    final featuredImageStr =
+        hasFeaturedImage ? service.featuredImage.toString() : '';
+    final isNetworkImage =
+        hasFeaturedImage && featuredImageStr.startsWith('http');
+
+    final hasDescription = service.shortDescription.trim().isNotEmpty;
+    final cardAccent = service.accentColor ?? _defaultCardAccentGreen;
+
+    Widget logoChild;
+    if (hasFeaturedImage) {
+      if (isNetworkImage) {
+        logoChild = Image.network(
+          featuredImageStr,
+          height: 32,
+          fit: BoxFit.contain,
+          errorBuilder: (context, error, stackTrace) => Icon(
+            Icons.business,
+            size: 28,
+            color: _logoBorderGreen,
+          ),
+        );
+      } else {
+        logoChild = Image.asset(
+          featuredImageStr,
+          height: 32,
+          fit: BoxFit.contain,
+          errorBuilder: (context, error, stackTrace) => Icon(
+            Icons.business,
+            size: 28,
+            color: _logoBorderGreen,
+          ),
+        );
+      }
+    } else {
+      logoChild = Icon(
+        Icons.apps,
+        size: 28,
+        color: _logoBorderGreen,
+      );
+    }
+
+    return Container(
+      margin: EdgeInsets.only(bottom: 12.0),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(_cardRadius),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.06),
+            blurRadius: 12,
+            offset: Offset(0, 4),
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(_cardRadius),
+        child: Material(
+          color: Colors.white,
+          child: InkWell(
+            onTap: () => _openWebView(context, service.link, service.title),
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final w = constraints.maxWidth;
+                final greenW = (w * 0.17).clamp(52.0, 82.0);
+                final logoMaxW = (w * 0.35).clamp(120.0, 220.0);
+                final overlap = 40.0;
+
+                return IntrinsicHeight(
+                  child: Stack(
+                    clipBehavior: Clip.none,
+                    children: [
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          Container(
+                            width: greenW,
+                            color: cardAccent,
+                          ),
+                          Expanded(
+                            child: Padding(
+                              padding: EdgeInsets.fromLTRB(
+                                10,
+                                52,
+                                12,
+                                14,
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  SizedBox(height: 10),
+                                  if (hasDescription)
+                                    Html(
+                                      data: service.shortDescription,
+                                      shrinkWrap: true,
+                                      onLinkTap:
+                                          (url, attributes, element) {
+                                        if (url != null &&
+                                            url.isNotEmpty) {
+                                          _openWebView(
+                                            context,
+                                            url,
+                                            service.title,
+                                          );
+                                        }
+                                      },
+                                      style: {
+                                        "body": Style(
+                                          fontSize: FontSize(16),
+                                          color: Color(0xFF212121),
+                                          margin: Margins.zero,
+                                          padding: HtmlPaddings.zero,
+                                        ),
+                                        "p": Style(
+                                          margin: Margins.zero,
+                                          padding: HtmlPaddings.zero,
+                                        ),
+                                        "ul": Style(
+                                          margin: Margins.only(
+                                            left: 12.0,
+                                          ),
+                                          padding: HtmlPaddings.zero,
+                                        ),
+                                        "li": Style(
+                                          margin: Margins.zero,
+                                          padding: HtmlPaddings.zero,
+                                        ),
+                                        "a": Style(
+                                          color: _logoBorderGreen,
+                                        ),
+                                      },
+                                    ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      Positioned(
+                        left: greenW - overlap,
+                        top: 12,
+                        child: _buildLogoPill(
+                          logoChild: logoChild,
+                          maxWidth: logoMaxW,
+                        ),
+                      ),
+                      Positioned(
+                        top: 12,
+                        right: 12,
+                        child: _buildOpenPillButton(context, service),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   Future<void> _openWebView(
     BuildContext context,
     String url,
@@ -174,229 +418,10 @@ class _ServicesPageState extends State<ServicesPage> {
                     ),
                   )
                 : ListView.builder(
-                    padding: EdgeInsets.all(16.0),
+                    padding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
                     itemCount: services.length,
                     itemBuilder: (context, index) {
-                      final service = services[index];
-                      final hasFeaturedImage =
-                          service.featuredImage != null &&
-                          service.featuredImage != false &&
-                          service.featuredImage.toString().isNotEmpty;
-                      final featuredImageStr = hasFeaturedImage
-                          ? service.featuredImage.toString()
-                          : '';
-                      final isNetworkImage =
-                          hasFeaturedImage &&
-                          featuredImageStr.startsWith('http');
-
-                      return Card(
-                        margin: EdgeInsets.only(bottom: 16.0),
-                        elevation: 1,
-                        color: Color(0xFFffffff),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16.0),
-                        ),
-                        child: InkWell(
-                          onTap: () => _openWebView(
-                            context,
-                            service.link,
-                            service.title,
-                          ),
-                          borderRadius: BorderRadius.circular(16.0),
-                          child: Padding(
-                            padding: EdgeInsets.all(20.0),
-                            child: Stack(
-                              children: [
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.end,
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Container(
-                                      constraints: BoxConstraints(
-                                        maxWidth: 200,
-                                        maxHeight: 40,
-                                      ),
-                                      alignment: Alignment.centerLeft,
-                                      decoration: BoxDecoration(
-                                        borderRadius: BorderRadius.circular(
-                                          12.0,
-                                        ),
-                                      ),
-                                      child: hasFeaturedImage
-                                          ? (isNetworkImage
-                                                ? Image.network(
-                                                    featuredImageStr,
-                                                    fit: BoxFit.contain,
-                                                    alignment: Alignment.center,
-                                                    loadingBuilder:
-                                                        (
-                                                          context,
-                                                          child,
-                                                          loadingProgress,
-                                                        ) {
-                                                          if (loadingProgress ==
-                                                              null) {
-                                                            return child;
-                                                          }
-                                                          return Center(
-                                                            child: CircularProgressIndicator(
-                                                              value:
-                                                                  loadingProgress
-                                                                          .expectedTotalBytes !=
-                                                                      null
-                                                                  ? loadingProgress
-                                                                            .cumulativeBytesLoaded /
-                                                                        loadingProgress
-                                                                            .expectedTotalBytes!
-                                                                  : null,
-                                                              valueColor:
-                                                                  AlwaysStoppedAnimation<
-                                                                    Color
-                                                                  >(
-                                                                    Color(
-                                                                      0xFF71A33F,
-                                                                    ),
-                                                                  ),
-                                                              strokeWidth: 2,
-                                                            ),
-                                                          );
-                                                        },
-                                                    errorBuilder:
-                                                        (
-                                                          context,
-                                                          error,
-                                                          stackTrace,
-                                                        ) {
-                                                          return Icon(
-                                                            Icons
-                                                                .image_not_supported,
-                                                            color: Colors.grey,
-                                                          );
-                                                        },
-                                                  )
-                                                : Image.asset(
-                                                    featuredImageStr,
-                                                    fit: BoxFit.contain,
-                                                    alignment: Alignment.center,
-                                                    errorBuilder:
-                                                        (
-                                                          context,
-                                                          error,
-                                                          stackTrace,
-                                                        ) {
-                                                          return Icon(
-                                                            Icons
-                                                                .image_not_supported,
-                                                            color: Colors.grey,
-                                                          );
-                                                        },
-                                                  ))
-                                          : Icon(
-                                              Icons.image_not_supported,
-                                              color: Colors.grey,
-                                            ),
-                                    ),
-                                    SizedBox(width: 16.0),
-                                    Expanded(
-                                      child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [],
-                                      ),
-                                    ),
-                                  ],
-                                ),
-
-                                Padding(
-                                  padding: EdgeInsets.only(
-                                    left: 0.0,
-                                    right: 0.0,
-                                    top: 50.0,
-                                    bottom: 0.0,
-                                  ),
-                                  child: Html(
-                                    data: service.shortDescription,
-                                    style: {
-                                      "body": Style(
-                                        fontSize: FontSize(14),
-                                        // color: Colors.grey[600],
-                                        margin: Margins.zero,
-                                        padding: HtmlPaddings.zero,
-                                      ),
-                                      "p": Style(
-                                        margin: Margins.zero,
-                                        padding: HtmlPaddings.zero,
-                                      ),
-                                      "ul": Style(
-                                        margin: Margins.only(left: 15.0),
-                                        padding: HtmlPaddings.zero,
-                                      ),
-                                      "li": Style(
-                                        margin: Margins.zero,
-                                        padding: HtmlPaddings.zero,
-                                      ),
-                                    },
-                                  ),
-                                ),
-
-                                Positioned(
-                                  top: 0,
-                                  right: 0,
-                                  child: GestureDetector(
-                                    onTap: () => _openWebView(
-                                      context,
-                                      service.link,
-                                      service.title,
-                                    ),
-                                    child: Container(
-                                      width: 80,
-                                      height: 35,
-                                      padding: EdgeInsets.symmetric(
-                                        horizontal: 10,
-                                        vertical: 5,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        color: Color(0xFFDFFEB9),
-                                        borderRadius: BorderRadius.circular(10),
-                                      ),
-                                      child: Center(
-                                        child: Row(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.center,
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.center,
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            Text(
-                                              'Open',
-                                              style: TextStyle(
-                                                color: Color(0xFF497844),
-                                                fontSize: 14,
-                                                fontWeight: FontWeight.w600,
-                                              ),
-                                            ),
-                                            Expanded(child: SizedBox(width: 5)),
-                                            SvgPicture.asset(
-                                              'assets/images/arrow.svg',
-                                              width: 12,
-                                              height: 12,
-                                              colorFilter: ColorFilter.mode(
-                                                Color(0xFF497844),
-                                                BlendMode.srcIn,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      );
+                      return _buildServiceCard(context, services[index]);
                     },
                   ),
           ),
