@@ -85,6 +85,14 @@ class VideoGuide {
   }
 }
 
+/// How cards are laid out within a [groupType] section.
+enum ServiceGroupLayout {
+  /// One full-width card per row (e.g. Auto & Home).
+  fullWidth,
+  /// Two cards per row (e.g. Health / Travel).
+  twoColumn,
+}
+
 class MobileService {
   final String title;
   final dynamic featuredImage; // Can be String or false
