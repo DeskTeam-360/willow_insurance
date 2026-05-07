@@ -414,7 +414,7 @@ class _StaffCard extends StatelessWidget {
                   detailLine,
                   textAlign: TextAlign.center,
                   style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.92),
+                    color: Color(0xFFD8D8D8),
                     fontSize: 11,
                     height: 1.25,
                   ),
@@ -424,7 +424,7 @@ class _StaffCard extends StatelessWidget {
                   roleLine,
                   textAlign: TextAlign.center,
                   style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.88),
+                    color: Color(0xFFD6F6B0),
                     fontSize: 11,
                     height: 1.25,
                   ),
