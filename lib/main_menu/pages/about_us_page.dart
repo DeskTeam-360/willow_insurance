@@ -8,7 +8,6 @@ class AboutUsPage extends StatelessWidget {
   static const Color _meetStaffBg = Color(0xFF5B973A);
   static const Color _staffCardBg = Color(0xFF497844);
   static const Color _nameBadgeYellow = Color(0xFFECBF33);
-  static const Color _avatarRing = Color(0xFFB8D99A);
 
   @override
   Widget build(BuildContext context) {
